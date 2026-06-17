@@ -5010,7 +5010,7 @@ GameObject:
   - component: {fileID: 1901309791280250612}
   - component: {fileID: 312228895565667581}
   m_Layer: 0
-  m_Name: SnipeEnemy
+  m_Name: UNUSED_SnipeEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

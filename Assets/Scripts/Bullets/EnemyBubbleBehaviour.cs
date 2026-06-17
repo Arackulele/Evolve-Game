@@ -53,7 +53,7 @@ public class EnemyBubbleBehavior : BaseBulletBehavior
 
         if (!collide && Sound.GetRandomItem() != null) Sound.GetRandomItem().PlayOneShot(Audio);
 
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.1f);
 
         transform.GetChild(1).GetChild(0).GetComponent<ParticleSystem>().emissionRate = 0;
 
@@ -70,7 +70,7 @@ public class EnemyBubbleBehavior : BaseBulletBehavior
 
         yield return new WaitForEndOfFrame();
 
-        if (transform.localScale.x > 0) transform.localScale = new Vector3(transform.localScale.x - 0.04f, transform.localScale.y - 0.04f, transform.localScale.z - 0.04f); ;
+        if (transform.localScale.x > 0) transform.localScale = new Vector3(transform.localScale.x - 0.08f, transform.localScale.y - 0.08f, transform.localScale.z - 0.08f); ;
         
         }
 

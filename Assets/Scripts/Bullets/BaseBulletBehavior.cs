@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using static UnityEngine.GraphicsBuffer;
 
 public abstract class BaseBulletBehavior : MonoBehaviour
@@ -25,8 +26,10 @@ public abstract class BaseBulletBehavior : MonoBehaviour
     public bool collide = true;
 
     public List<AudioSource> Sound;
-
+    
     public bool enemy = false;
+
+    public bool DeleteVisualsOnExpire = true;
 
     // Start is called before the first frame update
     void Start()
@@ -70,7 +73,7 @@ public abstract class BaseBulletBehavior : MonoBehaviour
 
                 if (Sound.GetRandomItem() != null) Sound.GetRandomItem().PlayOneShot(Audio);
 
-                if (!piercing) Destroy(gameObject);
+                if (!piercing) DestroyBullet();
             }
 
         }
@@ -83,7 +86,7 @@ public abstract class BaseBulletBehavior : MonoBehaviour
 
             if (Sound.GetRandomItem() != null) Sound.GetRandomItem().PlayOneShot(Audio);
 
-            if (!piercing) Destroy(gameObject);
+            if (!piercing) DestroyBullet();
 
         }
 
@@ -99,7 +102,25 @@ public abstract class BaseBulletBehavior : MonoBehaviour
 
         if (!collide && Sound.GetRandomItem() != null) Sound.GetRandomItem().PlayOneShot(Audio);
 
-        Destroy(gameObject);
+        DestroyBullet();
+    }
+
+    private void DestroyBullet()
+    {
+        if (DeleteVisualsOnExpire) Destroy(gameObject);
+        else
+        {
+
+            foreach (Transform t in this.transform)
+            {
+                t.SetParent(null, false);
+            }
+            Destroy(gameObject);
+            
+        }
+        
+
+
     }
 
 }

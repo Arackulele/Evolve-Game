@@ -1,97 +1,164 @@
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 public class MeteorBehavior : MonoBehaviour
 {
-    public bool update = true;
-
     public float speed = 1f;
-
     public float hp = 20f;
 
-    public GameObject player;
+    [SerializeField] private int splitDepth = 0;
+    [SerializeField] private int maxSplitDepth = -1;
 
-    public GameObject prefab;
+    private bool dying;
+    private bool shouldAimAtPlayerOnStart = true;
 
-    private bool dying = false;
+    private const int MinimumMaxSplitDepth = 1;
+    private const int MaximumMaxSplitDepth = 2;
+    private const int SplitCount = 2;
 
-    // Start is called before the first frame update
-    void Start()
+    private const float ChildHealth = 12f;
+    private const float ChildScaleMultiplier = 0.45f;
+
+    private const float ChildSpeedMultiplierMin = 0.9f;
+    private const float ChildSpeedMultiplierMax = 1.1f;
+
+    private const float Lifetime = 50f;
+
+    private const float PlayerBounceMultiplier = -0.6f;
+    private const float MinimumBounceVelocity = 2f;
+    private const float BounceBoostXThreshold = 4f;
+    private const float BounceBoostYThreshold = 5f;
+    private const float BounceBoostMultiplier = 1.6f;
+
+    private void Start()
     {
-        if (CharacterController2D.Instance != null) transform.right = CharacterController2D.Instance.gameObject.transform.position - transform.position;
-        if (CharacterController2D.Instance != null) player = CharacterController2D.Instance.gameObject;
+        if (maxSplitDepth < 0)
+            maxSplitDepth = Random.Range(MinimumMaxSplitDepth, MaximumMaxSplitDepth + 1);
 
-        prefab = this.gameObject;
+        if (shouldAimAtPlayerOnStart)
+            AimAtPlayer();
 
         StartCoroutine(DestroyAfterTime());
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if (update)
-        {
-            transform.position += transform.right * speed * Time.deltaTime;
-        }
+        Move();
 
-        if (hp < 0f && !dying) 
-        {
-            dying = true;
-            int e = UnityEngine.Random.Range(2, 3);
-
-            while (e > 0)
-            {
-                prefab.GetComponent<MeteorBehavior>().hp = 12;
-                GameObject enemy = Instantiate(prefab);
-                MeteorBehavior b = enemy.GetComponent<MeteorBehavior>();
-                b.speed *= (float)UnityEngine.Random.Range(5000, 15000) / 10000;
-                enemy.transform.localScale *= (float)UnityEngine.Random.Range(500, 2500) / 10000;
-                enemy.transform.position = transform.position;
-                e--;
-            }
-
-            Destroy(gameObject);
-        
-        }
-
+        if (hp <= 0f && !dying)
+            Die();
     }
 
-    private void OnTriggerEnter2D(Collider2D col)
+    private void Move()
     {
-        if (col.GetComponent<CharacterController2D>() != null)
-        {
-            CharacterController2D.Instance.velocity *= -0.6f;
-
-            
-            if (CharacterController2D.Instance.velocity.x < 2 && CharacterController2D.Instance.velocity.y < 2) CharacterController2D.Instance.velocity -= new  Vector2(transform.position.x - player.transform.position.x, transform.position.y - player.transform.position.y);
-
-
-            if (CharacterController2D.Instance.velocity.x < 4 && CharacterController2D.Instance.velocity.y < 5) CharacterController2D.Instance.velocity *= 1.6f;
-        }
-
-        else if (col.GetComponent<BaseBulletBehavior>() != null)
-        {
-            BaseBulletBehavior Bu = col.GetComponent<BaseBulletBehavior>();
-            hp -= Bu.basedamage;
-            if (Bu.Sound.GetRandomItem() != null) Bu.Sound.GetRandomItem().PlayOneShot(Bu.Audio);
-            if (!Bu.piercing) Destroy(Bu.gameObject);
-
-        }
+        transform.position += transform.right * speed * Time.deltaTime;
     }
 
-    private void StayTriggerEnter2D(Collider2D col)
+    private void AimAtPlayer()
     {
-        // move out more
+        if (CharacterController2D.Instance == null)
+            return;
+
+        Vector2 directionToPlayer =
+            CharacterController2D.Instance.transform.position - transform.position;
+
+        transform.right = directionToPlayer.normalized;
     }
 
-    private IEnumerator DestroyAfterTime()
+    private void Die()
     {
-        yield return new WaitForSeconds(50f);
+        dying = true;
+
+        if (CanSplit())
+            Split();
 
         Destroy(gameObject);
     }
 
+    private bool CanSplit()
+    {
+        return splitDepth < maxSplitDepth;
+    }
+
+    private void Split()
+    {
+        for (int i = 0; i < SplitCount; i++)
+        {
+            GameObject child = Instantiate(gameObject, transform.position, GetRandomSplitRotation());
+            MeteorBehavior childMeteor = child.GetComponent<MeteorBehavior>();
+
+            childMeteor.hp = ChildHealth;
+            childMeteor.speed = speed * Random.Range(ChildSpeedMultiplierMin, ChildSpeedMultiplierMax);
+            childMeteor.splitDepth = splitDepth + 1;
+            childMeteor.maxSplitDepth = maxSplitDepth;
+            childMeteor.dying = false;
+            childMeteor.shouldAimAtPlayerOnStart = false;
+
+            child.transform.localScale = transform.localScale * ChildScaleMultiplier;
+        }
+    }
+
+    private Quaternion GetRandomSplitRotation()
+    {
+        return Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+    }
+
+    private void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.TryGetComponent(out CharacterController2D player))
+        {
+            BouncePlayer(player);
+            return;
+        }
+
+        if (col.TryGetComponent(out BaseBulletBehavior bullet))
+        {
+            TakeBulletDamage(bullet);
+        }
+    }
+
+    private void BouncePlayer(CharacterController2D player)
+    {
+        player.velocity *= PlayerBounceMultiplier;
+
+        if (Mathf.Abs(player.velocity.x) < MinimumBounceVelocity &&
+            Mathf.Abs(player.velocity.y) < MinimumBounceVelocity)
+        {
+            Vector2 awayFromMeteor = player.transform.position - transform.position;
+            player.velocity += awayFromMeteor.normalized;
+        }
+
+        if (Mathf.Abs(player.velocity.x) < BounceBoostXThreshold &&
+            Mathf.Abs(player.velocity.y) < BounceBoostYThreshold)
+        {
+            player.velocity *= BounceBoostMultiplier;
+        }
+    }
+
+    private void TakeBulletDamage(BaseBulletBehavior bullet)
+    {
+        hp -= bullet.basedamage;
+
+        PlayBulletSound(bullet);
+
+        if (!bullet.piercing)
+            Destroy(bullet.gameObject);
+    }
+
+    private void PlayBulletSound(BaseBulletBehavior bullet)
+    {
+        if (bullet.Sound == null || bullet.Sound.Count == 0)
+            return;
+
+        AudioSource sound = bullet.Sound.GetRandomItem();
+
+        if (sound != null)
+            sound.PlayOneShot(bullet.Audio);
+    }
+
+    private IEnumerator DestroyAfterTime()
+    {
+        yield return new WaitForSeconds(Lifetime);
+        Destroy(gameObject);
+    }
 }

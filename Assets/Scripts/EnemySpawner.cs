@@ -1,313 +1,254 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using Unity.VisualScripting;
 
 public class EnemySpawner : MonoBehaviour
 {
-
+    [Header("Difficulty")]
     public int difficulty = 1;
-
-    public GameObject enemytype;
-
-    public GameObject fastenemytype;
-
-    public GameObject starenemytype;
-
-    public GameObject bubbleenemytype;
-
-    public GameObject snipeenemytype;
-
-    public GameObject spawnerenemytype;
-
-    public GameObject meteortype;
-
-    public GameObject shopMenu;
-
-    public ParticleSystem current;
-
-    public GameObject rotateparent;
-
-    public ShopUI UI;
-
-    List<GameObject> spawnpoints;
-
-
     public bool enemies = true;
 
-    // Start is called before the first frame update
-    void Start()
+    [Header("Enemy Categories")]
+    public List<GameObject> regularEnemies = new();
+    public List<GameObject> gimmickSet1Enemies = new();
+    public List<GameObject> gimmickSet2Enemies = new();
+    public List<GameObject> bigEnemies = new();
+
+    [Header("Other Spawns")]
+    public GameObject meteortype;
+
+    [Header("Shop")]
+    public GameObject shopMenu;
+    public ShopUI UI;
+
+    [Header("Ocean Current")]
+    public ParticleSystem current;
+    public GameObject rotateparent;
+
+    private List<GameObject> spawnpoints;
+
+    private const float RegularEnemyDifficultyMultiplier = 0.2f;
+    private const float GimmickSet1DifficultyMultiplier = 0.15f;
+    private const float GimmickSet2DifficultyMultiplier = 0.24f;
+    private const float BigEnemyDifficultyMultiplier = 0.1f;
+    private const float ExtraBigEnemyDifficultyMultiplier = 0.08f;
+
+    private enum EnemySpawnCategory
+    {
+        Regular,
+        GimmickSet1,
+        GimmickSet2,
+        Big
+    }
+
+    private void Start()
     {
         spawnpoints = GameObject.FindGameObjectsWithTag("SpawnPoint").ToList();
 
-        StartCoroutine(spawnEnemies());
-        StartCoroutine(spawnRandomMeteors());
-        StartCoroutine(spawnOceanCurrent());
+        StartCoroutine(SpawnEnemies());
+        StartCoroutine(SpawnRandomMeteors());
+        StartCoroutine(SpawnOceanCurrent());
 
         ExitScreen.instance = GameObject.FindGameObjectWithTag("Exit");
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-
-
         StaticVars.wave = difficulty;
-
-
-
-
-
-        List<EnemyBehavior> l = new List<EnemyBehavior>();
-        l.AddRange(UnityEngine.Object.FindObjectsOfType<EnemyBehavior>());
-        if (l.Count > 1) enemies = true;
-        else enemies = false;
-
-
-
+        enemies = FindObjectsOfType<EnemyBehavior>().Length > 1;
     }
 
-    private IEnumerator spawnRandomMeteors()
+    private IEnumerator SpawnEnemies()
     {
-
         while (CharacterController2D.Instance != null)
         {
+            yield return new WaitForSeconds(1f);
 
-            yield return new WaitForSeconds(UnityEngine.Random.Range(30, 90));
+            if (enemies)
+                continue;
 
-            int e = UnityEngine.Random.Range(1, 2);
+            yield return new WaitForSeconds(Random.Range(3f, 6f));
 
-            while (e > 0)
+            int regularCount = GetSpawnCount(RegularEnemyDifficultyMultiplier);
+            int gimmickSet1Count = GetSpawnCount(GimmickSet1DifficultyMultiplier);
+            int gimmickSet2Count = 0;
+            int bigEnemyCount = 0;
+
+            if (difficulty > 4 && RandomChance())
+                gimmickSet2Count = GetSpawnCount(GimmickSet2DifficultyMultiplier);
+
+            if (difficulty > 9)
             {
-                GameObject Sp = spawnpoints.GetRandomItem();
+                if (RandomChance())
+                {
+                    gimmickSet1Count = 0;
+                    bigEnemyCount = GetSpawnCount(BigEnemyDifficultyMultiplier);
+                }
 
-                yield return Sp.GetComponent<SpawnPoint>().DisplayWarn();
-
-                GameObject enemy = Instantiate(meteortype);
-                MeteorBehavior b = enemy.GetComponent<MeteorBehavior>();
-                b.speed *= (float)UnityEngine.Random.Range(5000, 15000) / 10000;
-                enemy.transform.localScale *= (float)UnityEngine.Random.Range(2000, 10000) / 10000;
-
-                enemy.transform.position = Sp.transform.position;
-                e--;
+                if (RandomChance())
+                    bigEnemyCount += GetSpawnCount(ExtraBigEnemyDifficultyMultiplier);
             }
 
-        }
+            yield return SpawnGroup(regularEnemies, regularCount, EnemySpawnCategory.Regular);
+            yield return SpawnGroup(gimmickSet1Enemies, gimmickSet1Count, EnemySpawnCategory.GimmickSet1);
+            yield return SpawnGroup(gimmickSet2Enemies, gimmickSet2Count, EnemySpawnCategory.GimmickSet2);
+            yield return SpawnGroup(bigEnemies, bigEnemyCount, EnemySpawnCategory.Big);
 
+            FinishWave();
+        }
     }
 
-    private IEnumerator spawnOceanCurrent()
+    private IEnumerator SpawnGroup(List<GameObject> enemyList, int amount, EnemySpawnCategory category)
     {
+        if (enemyList == null || enemyList.Count == 0)
+            yield break;
 
+        for (int i = 0; i < amount; i++)
+        {
+            GameObject spawnPoint = GetRandomSpawnPoint();
+
+            yield return spawnPoint.GetComponent<SpawnPoint>().DisplayWarn();
+
+            GameObject enemy = Instantiate(GetRandomEnemy(enemyList));
+            ApplySpawnModifiers(enemy, category);
+            enemy.transform.position = spawnPoint.transform.position;
+        }
+    }
+
+    private void ApplySpawnModifiers(GameObject enemy, EnemySpawnCategory category)
+    {
+        switch (category)
+        {
+            case EnemySpawnCategory.Regular:
+                if (enemy.TryGetComponent(out EnemyBehavior enemyBehavior))
+                {
+                    enemyBehavior.speed *= RandomMultiplier(0.8f, 1.5f);
+                    enemyBehavior.turnspeed *= RandomMultiplier(0.5f, 1.5f);
+                }
+
+                enemy.transform.localScale *= RandomMultiplier(0.75f, 1.25f);
+                break;
+
+            case EnemySpawnCategory.GimmickSet1:
+                if (enemy.TryGetComponent(out FastEnemyBehavior fastEnemyBehavior))
+                {
+                    fastEnemyBehavior.speed *= RandomMultiplier(0.8f, 1.2f);
+                    fastEnemyBehavior.turnspeed *= RandomMultiplier(0.75f, 1.25f);
+                }
+
+                enemy.transform.localScale *= RandomMultiplier(0.75f, 1.25f);
+                break;
+
+            case EnemySpawnCategory.GimmickSet2:
+                if (enemy.TryGetComponent(out BounceEnemyBehavior bounceEnemyBehavior))
+                {
+                    bounceEnemyBehavior.speed *= RandomMultiplier(0.8f, 1.2f);
+                }
+
+                if (enemy.TryGetComponent(out BubbleEnemyBehaviour bubbleEnemyBehaviour))
+                {
+                    bubbleEnemyBehaviour.speed *= RandomMultiplier(0.5f, 1.5f);
+                    bubbleEnemyBehaviour.turnspeed *= RandomMultiplier(0.5f, 1.5f);
+
+                    enemy.transform.localScale *= RandomMultiplier(0.75f, 1.25f);
+                }
+
+                break;
+
+            case EnemySpawnCategory.Big:
+                enemy.transform.localScale *= RandomMultiplier(0.9f, 1.1f);
+                break;
+        }
+    }
+
+    private IEnumerator SpawnRandomMeteors()
+    {
+        while (CharacterController2D.Instance != null)
+        {
+            yield return new WaitForSeconds(Random.Range(30f, 90f));
+
+            GameObject spawnPoint = GetRandomSpawnPoint();
+
+            yield return spawnPoint.GetComponent<SpawnPoint>().DisplayWarn();
+
+            GameObject meteor = Instantiate(meteortype);
+
+            if (meteor.TryGetComponent(out MeteorBehavior meteorBehavior))
+                meteorBehavior.speed *= RandomMultiplier(0.5f, 1.5f);
+
+            meteor.transform.localScale *= RandomMultiplier(0.2f, 1f);
+            meteor.transform.position = spawnPoint.transform.position;
+        }
+    }
+
+    private IEnumerator SpawnOceanCurrent()
+    {
         while (CharacterController2D.Instance != null)
         {
             yield return new WaitForEndOfFrame();
-            yield return new WaitForSeconds(UnityEngine.Random.Range(50, 240));
+            yield return new WaitForSeconds(Random.Range(50f, 240f));
 
-            print("enabling current");
-            Quaternion dir = Quaternion.Euler(0, 0, UnityEngine.Random.Range(0, 360));
-
-
+            Quaternion direction = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
 
             yield return new WaitForSeconds(3f);
 
-            float speed = 0.02f;
+            rotateparent.transform.rotation = direction;
+            SetCurrentEmission(true);
 
-            rotateparent.transform.rotation = dir;
+            CharacterController2D.Instance.passivevelocity +=
+                (Vector2)rotateparent.transform.right * 0.02f;
 
+            yield return new WaitForSeconds(Random.Range(27f, 43f));
 
-            current.enableEmission = true;
+            SetCurrentEmission(false);
 
-            dir *= Quaternion.Euler(0, 0, -90f);
-
-                CharacterController2D.Instance.passivevelocity.x += (rotateparent.transform.right * speed).x;
-
-                CharacterController2D.Instance.passivevelocity.y += (rotateparent.transform.right * speed).y;
-
-            yield return new WaitForSeconds(UnityEngine.Random.Range(27, 43));
-
-
-            current.enableEmission = false;
-
-
-            //ToDo: Interpolate passive velocity back to 0
-            CharacterController2D.Instance.passivevelocity = new Vector2();
+            // TODO: Interpolate passive velocity back to 0.
+            CharacterController2D.Instance.passivevelocity = Vector2.zero;
         }
-
     }
 
-    private IEnumerator spawnEnemies()
+    private int GetSpawnCount(float difficultyMultiplier)
     {
-
-    while (CharacterController2D.Instance != null) {
-
-
-            yield return new WaitForSeconds(1f);
-
-            if (enemies == false)
-            {
-
-                yield return new WaitForSeconds(UnityEngine.Random.Range(3f, 6f));
-
-                //how many basic enemies to spawn
-                int e = 1 + UnityEngine.Random.Range(0, (int)(difficulty * 0.2));
-
-                //how many special enemies to spawn
-                int s = 1 + UnityEngine.Random.Range(0, (int)(difficulty * 0.15));
-
-                int sn = 0;
-
-                //how many gimmick
-                int g = 0;
-
-                int h = 0;
-
-                //how many big guys
-                int sp = 0;
-
-                if (difficulty > 4)
-                {
-                    if (UnityEngine.Random.Range(0, 10) > 5) g = 1 + UnityEngine.Random.Range(0, (int)(difficulty * 0.24));
-                    else h = 1 + UnityEngine.Random.Range(0, (int)(difficulty * 0.24));
-                }
-
-                if (difficulty > 9)
-                {
-                    if (UnityEngine.Random.Range(0, 10) > 5)
-                    {
-                        s = 0;
-                        sn = 1 + UnityEngine.Random.Range(0, (int)(difficulty * 0.1));
-
-                    }
-
-                    if (UnityEngine.Random.Range(0, 10) > 5)
-                    {
-                        sp = 1 + UnityEngine.Random.Range(0, (int)(difficulty * 0.08));
-
-                    }
-
-                }
-
-
-                //SpawnDefaultEnemies
-                while (e > 0)
-                {
-                    GameObject Sp = spawnpoints.GetRandomItem();
-
-                    yield return Sp.GetComponent<SpawnPoint>().DisplayWarn();
-
-
-                    GameObject enemy = Instantiate(enemytype);
-                    EnemyBehavior b = enemy.GetComponent<EnemyBehavior>();
-                    b.speed *= (float)UnityEngine.Random.Range(8000, 15000) / 10000;
-                    b.turnspeed *= (float)UnityEngine.Random.Range(5000, 15000) / 10000;
-                    enemy.transform.localScale *= (float)UnityEngine.Random.Range(7500, 12500) / 10000;
-
-                    enemy.transform.position = Sp.transform.position;
-                    e--;
-                }
-
-
-                //SpawnFastEnemies
-                while (s > 0)
-                {
-                    GameObject Sp = spawnpoints.GetRandomItem();
-
-                    yield return Sp.GetComponent<SpawnPoint>().DisplayWarn();
-
-                    GameObject enemy = Instantiate(fastenemytype);
-                    FastEnemyBehavior b = enemy.GetComponent<FastEnemyBehavior>();
-                    b.speed *= (float)UnityEngine.Random.Range(8000, 12000) / 10000;
-                    b.turnspeed *= (float)UnityEngine.Random.Range(7500, 12500) / 10000;
-                    enemy.transform.localScale *= (float)UnityEngine.Random.Range(7500, 12500) / 10000;
-
-                    enemy.transform.position = Sp.transform.position;
-                    s--;
-                }
-
-                //SpawnSnipeEnemies
-                while (sn > 0)
-                {
-                    GameObject Sp = spawnpoints.GetRandomItem();
-
-                    yield return Sp.GetComponent<SpawnPoint>().DisplayWarn();
-
-                    GameObject enemy = Instantiate(snipeenemytype);
-                    SnipeEnemyBehaviour b = enemy.GetComponent<SnipeEnemyBehaviour>();
-                    enemy.transform.localScale *= (float)UnityEngine.Random.Range(9000, 11000) / 10000;
-
-                    enemy.transform.position = Sp.transform.position;
-                    sn--;
-                }
-
-
-                //SpawnSpawner
-                while (sp > 0)
-                {
-                    GameObject Sp = spawnpoints.GetRandomItem();
-
-                    yield return Sp.GetComponent<SpawnPoint>().DisplayWarn();
-
-                    GameObject enemy = Instantiate(spawnerenemytype);
-                    SpawnEnemyBehaviour b = enemy.GetComponent<SpawnEnemyBehaviour>();
-                    enemy.transform.localScale *= (float)UnityEngine.Random.Range(9000, 11000) / 10000;
-
-                    enemy.transform.position = Sp.transform.position;
-                    sp--;
-                }
-
-
-                //SpawnStarEnemies
-                while (g > 0)
-                {
-
-                    GameObject Sp = spawnpoints.GetRandomItem();
-
-                    yield return Sp.GetComponent<SpawnPoint>().DisplayWarn();
-
-                    GameObject enemy = Instantiate(starenemytype);
-                    BounceEnemyBehavior b = enemy.GetComponent<BounceEnemyBehavior>();
-                    b.speed *= (float)UnityEngine.Random.Range(8000, 12000) / 10000;
-
-                    enemy.transform.position = Sp.transform.position;
-                    g--;
-                }
-
-                //SpawnDefaultEnemies
-                while (h > 0)
-                {
-                    GameObject Sp = spawnpoints.GetRandomItem();
-
-                    yield return Sp.GetComponent<SpawnPoint>().DisplayWarn();
-
-                    GameObject enemy = Instantiate(bubbleenemytype);
-                    BubbleEnemyBehaviour b = enemy.GetComponent<BubbleEnemyBehaviour>();
-                    b.speed *= (float)UnityEngine.Random.Range(5000, 15000) / 10000;
-                    b.turnspeed *= (float)UnityEngine.Random.Range(5000, 15000) / 10000;
-                    enemy.transform.localScale *= (float)UnityEngine.Random.Range(7500, 12500) / 10000;
-
-                    enemy.transform.position = Sp.transform.position;
-                    h--;
-                }
-
-                difficulty++;
-                StaticVars.highscore += 5 * difficulty;
-
-
-                if (difficulty % 5 == 0)
-                {
-                    shopMenu.SetActive(true);
-                    UI.UpdateShop(difficulty);
-                    Time.timeScale = 0;
-                }
-
-            }
-
-        }
-
+        return 1 + Random.Range(0, Mathf.Max(1, (int)(difficulty * difficultyMultiplier)));
     }
 
+    private void FinishWave()
+    {
+        difficulty++;
+        StaticVars.highscore += 5 * difficulty;
+
+        if (difficulty % 5 == 0)
+        {
+            shopMenu.SetActive(true);
+            UI.UpdateShop(difficulty);
+            Time.timeScale = 0;
+        }
+    }
+
+    private GameObject GetRandomSpawnPoint()
+    {
+        return spawnpoints[Random.Range(0, spawnpoints.Count)];
+    }
+
+    private GameObject GetRandomEnemy(List<GameObject> enemies)
+    {
+        return enemies[Random.Range(0, enemies.Count)];
+    }
+
+    private float RandomMultiplier(float min, float max)
+    {
+        return Random.Range(min, max);
+    }
+
+    private bool RandomChance()
+    {
+        return Random.Range(0, 10) > 5;
+    }
+
+    private void SetCurrentEmission(bool enabled)
+    {
+        ParticleSystem.EmissionModule emission = current.emission;
+        emission.enabled = enabled;
+    }
 }

@@ -13301,7 +13301,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!96 &573356457
 TrailRenderer:
   serializedVersion: 3
@@ -13375,7 +13375,7 @@ TrailRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.3443396, g: 1, b: 0.8314717, a: 0.24313726}
+      key0: {r: 0.3443396, g: 1, b: 0.8314717, a: 0.08627451}
       key1: {r: 1, g: 1, b: 1, a: 0}
       key2: {r: 1, g: 1, b: 1, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
@@ -13391,7 +13391,7 @@ TrailRenderer:
       ctime5: 0
       ctime6: 0
       ctime7: 0
-      atime0: 21203
+      atime0: 0
       atime1: 65535
       atime2: 0
       atime3: 0
@@ -14254,7 +14254,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &678450755
 Transform:
   m_ObjectHideFlags: 0
@@ -24098,7 +24098,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!199 &700118666
 ParticleSystemRenderer:
   serializedVersion: 6
@@ -30243,7 +30243,7 @@ MonoBehaviour:
   Bullet: {fileID: 9084251346132493544, guid: a962a962bfdd775488cc124e8df708d7, type: 3}
   cooldown: 150
   Audio: {fileID: 8300000, guid: c41dd8ea3e9de9a41aa629087b553066, type: 3}
-  local: 1
+  local: 0
 --- !u!1 &872667293
 GameObject:
   m_ObjectHideFlags: 0
@@ -38853,18 +38853,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   difficulty: 1
-  enemytype: {fileID: 1901309791280250600, guid: ba4943d2b6f675a48bb825c36e39d66d, type: 3}
-  fastenemytype: {fileID: 1901309791280250600, guid: 53bb1ffe85e27b043895aec865908c9e, type: 3}
-  starenemytype: {fileID: 1901309791280250600, guid: 535ec636f767801498ca49ce636885a7, type: 3}
-  bubbleenemytype: {fileID: 1901309791280250600, guid: 52401e9f66abcd941a892ab764b38fd5, type: 3}
-  snipeenemytype: {fileID: 1901309791280250600, guid: e314a4ecb6580134883310c2bd1eedfe, type: 3}
-  spawnerenemytype: {fileID: 1901309791280250600, guid: 91f9627f77ff8024bbf7751362bee99a, type: 3}
+  enemies: 1
+  regularEnemies:
+  - {fileID: 1901309791280250600, guid: ba4943d2b6f675a48bb825c36e39d66d, type: 3}
+  gimmickSet1Enemies:
+  - {fileID: 1901309791280250600, guid: 53bb1ffe85e27b043895aec865908c9e, type: 3}
+  gimmickSet2Enemies:
+  - {fileID: 1901309791280250600, guid: 52401e9f66abcd941a892ab764b38fd5, type: 3}
+  - {fileID: 1901309791280250600, guid: 535ec636f767801498ca49ce636885a7, type: 3}
+  bigEnemies:
+  - {fileID: 1901309791280250600, guid: 91f9627f77ff8024bbf7751362bee99a, type: 3}
   meteortype: {fileID: 6845930122287809345, guid: 5e688e79eb3a86f4fa5f8dda5866cef9, type: 3}
   shopMenu: {fileID: 1319272586}
+  UI: {fileID: 1319272588}
   current: {fileID: 1998443625}
   rotateparent: {fileID: 68409543}
-  UI: {fileID: 1319272588}
-  enemies: 1
 --- !u!1 &1397484260
 GameObject:
   m_ObjectHideFlags: 0
@@ -46523,7 +46526,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1950222279
 Transform:
   m_ObjectHideFlags: 0
@@ -46612,7 +46615,7 @@ TrailRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.3443396, g: 1, b: 0.8314717, a: 0.24313726}
+      key0: {r: 0.3443396, g: 1, b: 0.8314717, a: 0.08627451}
       key1: {r: 1, g: 1, b: 1, a: 0}
       key2: {r: 1, g: 1, b: 1, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
@@ -46628,7 +46631,7 @@ TrailRenderer:
       ctime5: 0
       ctime6: 0
       ctime7: 0
-      atime0: 21203
+      atime0: 0
       atime1: 65535
       atime2: 0
       atime3: 0
@@ -53656,7 +53659,7 @@ MonoBehaviour:
   iconSprite: {fileID: 0}
   cooldown: 3000
   player: {fileID: 745554871}
-  hitbox: {fileID: 9084251346132493544, guid: 8407d027e47a620499eb56bb0e5438b5, type: 3}
+  hitbox: {fileID: 9084251346132493544, guid: 2f62566d1d72c02e2bac1390199e3d4f, type: 3}
 --- !u!1 &2052782087
 GameObject:
   m_ObjectHideFlags: 0

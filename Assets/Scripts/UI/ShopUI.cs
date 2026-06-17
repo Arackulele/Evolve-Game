@@ -144,6 +144,8 @@ public class ShopUI : MonoBehaviour
             Time.timeScale = 1;
             this.gameObject.SetActive(false);
             cha.SetSideGun(SelectedSideGun1, true);
+            cha.SetSideGun(SelectedSideGun1, false);
+
 
         }
 
@@ -155,6 +157,8 @@ public class ShopUI : MonoBehaviour
             Time.timeScale = 1;
             this.gameObject.SetActive(false);
             cha.SetSideGun(SelectedSideGun2, false);
+            cha.SetSideGun(SelectedSideGun2, true);
+
 
         }
 

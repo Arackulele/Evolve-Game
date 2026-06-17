@@ -29,14 +29,14 @@ public class PoisonTail : TailBehaviour
 
         //1.5 seconds active total 
         int i = 0;
-        while (i < 8)
+        while (i < 20)
             {
             GameObject h = GameObject.Instantiate(hitbox);
 
             h.transform.position = transform.position;
             h.transform.rotation = transform.rotation;
 
-            yield return new WaitForSeconds(0.25f);
+            yield return new WaitForSeconds(0.1f);
             i++;
             }
 

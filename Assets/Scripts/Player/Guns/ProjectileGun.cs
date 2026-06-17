@@ -8,7 +8,7 @@ using static UnityEngine.GraphicsBuffer;
 public class ProjectileGun : FrontGun
 {
 
-    public bool local = false;
+    public bool local;
     public override void shoot()
     {
 

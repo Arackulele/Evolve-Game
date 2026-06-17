@@ -112,7 +112,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0.013, y: -0.02, z: -0.38}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 0.625, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9084251346132493542}
@@ -190,7 +190,7 @@ ParticleSystem:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  moveWithTransform: 0
+  moveWithTransform: 1
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 1
   randomSeed: 0
@@ -371,7 +371,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.5
+      scalar: 0.4
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -688,7 +688,7 @@ ParticleSystem:
         m_RotationOrder: 4
     randomizeRotationDirection: 0
     gravitySource: 0
-    maxNumParticles: 1000
+    maxNumParticles: 700
     customEmitterVelocity: {x: 0, y: 0, z: 0}
     size3D: 0
     rotation3D: 1
@@ -954,7 +954,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 60000
+      scalar: 20000
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -1393,15 +1393,15 @@ ParticleSystem:
       maxGradient:
         serializedVersion: 2
         key0: {r: 0.07456994, g: 1, b: 0, a: 0}
-        key1: {r: 0.2924528, g: 0.2924528, b: 0.2924528, a: 1}
-        key2: {r: 0, g: 0, b: 0, a: 1}
+        key1: {r: 0.46117857, g: 0.4716981, b: 0.3715735, a: 1}
+        key2: {r: 0, g: 0, b: 0, a: 0.2784314}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
         key5: {r: 0, g: 0, b: 0, a: 0}
         key6: {r: 0, g: 0, b: 0, a: 0}
         key7: {r: 0, g: 0, b: 0, a: 0}
         ctime0: 0
-        ctime1: 65535
+        ctime1: 21974
         ctime2: 0
         ctime3: 0
         ctime4: 0
@@ -1409,8 +1409,8 @@ ParticleSystem:
         ctime6: 0
         ctime7: 0
         atime0: 0
-        atime1: 2120
-        atime2: 38743
+        atime1: 5012
+        atime2: 8096
         atime3: 65535
         atime4: 0
         atime5: 0
@@ -5258,7 +5258,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   update: 0
-  basedamage: 3
+  basedamage: 1
   speed: 0
   lifetime: 0.5
   Audio: {fileID: 8300000, guid: c41dd8ea3e9de9a41aa629087b553066, type: 3}
@@ -5268,3 +5268,4 @@ MonoBehaviour:
   collide: 1
   Sound: []
   enemy: 0
+  DeleteVisualsOnExpire: 1

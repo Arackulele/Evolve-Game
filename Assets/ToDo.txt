@@ -1,0 +1,18 @@
+ToDo:
+
+Gameplay:
+-Add Enemy Tiering System ( shouldnt be in seperate prefabs / auto scaling )
+-Improve Shop UI
+-Add second activatable ability slot: Focus mode ( hold down button to do something )
+Example focus modes:
+Stop moving to fire homing projectiles
+Stop shooting but gain large amounts of speed
+Get slower but ramping attack speed
+
+Add Upgrade Categories instead of current slots, 2 are offered of each
+
+Add bosses
+Addd Stage selection after boss: DIffering stages have unique enemies and obstacles and bosses
+
+Code:
+Refactor Entities for less duplicate code
